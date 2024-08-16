@@ -38,19 +38,6 @@ class RunAnalysis:
 		elif len(parts) == 3:
 			return int(parts[0]) * 60 + int(parts[1]) + int(parts[2]) / 60
 
-	def streak_analysis(self):
-		self.df['days_since_last_run'] = self.df['date'].diff().dt.days
-		streaks = self.df[self.df['days_since_last_run'] <= 1]
-		current_streak = streaks[streaks['date'] >= streaks['date'].max() - pd.Timedelta(days=streaks['days_since_last_run'].iloc[-1])]
-		
-		longest_streak = streaks.groupby((streaks['days_since_last_run'] != 1).cumsum()).size().max()
-		current_streak_length = len(current_streak)
-		
-		return {
-			"longest_streak": int(longest_streak),
-			"current_streak": int(current_streak_length)
-		}
-
 	def weekly_mileage_trend(self):
 		weekly_mileage = self.df.groupby('week')['distance'].sum().reset_index()
 		weekly_mileage['week'] = weekly_mileage['week'].astype(str)
@@ -71,7 +58,7 @@ class RunAnalysis:
 		best_pace = self.df['pace'].min()
 		worst_pace = self.df['pace'].max()
 		
-		recent_runs = self.df.sort_values('date').tail(10)
+		recent_runs = self.df.sort_values('date').tail(10) # last 10 runs
 		recent_avg_pace = recent_runs['pace'].mean()
 		
 		pace_improvement = (avg_pace - recent_avg_pace) / avg_pace * 100
@@ -90,10 +77,6 @@ class RunAnalysis:
 		self.df['distance_category'] = pd.cut(self.df['distance'], bins=bins, labels=labels, include_lowest=True)
 		distribution = self.df['distance_category'].value_counts().to_dict()
 		return {k: int(v) for k, v in distribution.items()}
-
-	def elevation_vs_pace_correlation(self):
-		correlation = self.df['elevation'].corr(self.df['pace'])
-		return float(correlation)
 
 	def aggregate_by_period(self, period='month'):
 			if period not in ['month', 'year']:
@@ -130,11 +113,9 @@ class RunAnalysis:
 
 	def generate_insights(self):
 		return {
-			"streak_analysis": self.streak_analysis(),
 			"weekly_mileage_trend": self.weekly_mileage_trend(),
 			"pace_analysis": self.pace_analysis(),
-			"distance_distribution": self.distance_distribution(),
-			"elevation_pace_correlation": self.elevation_vs_pace_correlation()
+			"distance_distribution": self.distance_distribution()
 		}
 
 	def save_insights_to_json(self, filename='run_insights.json'):
