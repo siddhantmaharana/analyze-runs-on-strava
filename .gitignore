@@ -97,7 +97,3 @@ venv.bak/
 ehthumbs.db
 Thumbs.db
 
-# Project-specific
-plots/
-*.json
-*.log
